@@ -386,3 +386,18 @@ export function logError(e) {
     message: e.message,
   });
 }
+
+export function renderNativeOverlay() {
+  try {
+    var linkResource = document.querySelector("link.wrapped-resource");
+    var kind = linkResource.getAttribute("kind");
+    var src = linkResource.getAttribute("href");
+    var payload = {
+      kind: kind,
+      src: src,
+    };
+    webkit.messageHandlers.renderNativeOverlay.postMessage(payload);
+  } catch (e) {
+    console.warn("Wrapper fallback active:", e);
+  }
+}

@@ -18,12 +18,17 @@ import WebKit
     // MARK: - WebView Customization
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController)
+
+    /// Called when spread is loaded (wrapper around type which cannot directly be EPUB spine elements, e.g. PDF )
+    func navigator(_ navigator: EPUBNavigatorViewController, renderNativeOverlay spreadView: UIView, using params: Any)
 }
 
 public extension EPUBNavigatorDelegate {
     func navigator(_ navigator: EPUBNavigatorViewController, viewportDidChange viewport: EPUBNavigatorViewController.Viewport?) {}
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
+
+    func navigator(_ navigator: EPUBNavigatorViewController, renderNativeOverlay spreadView: UIView, using params: Any) {}
 }
 
 public typealias EPUBContentInsets = (top: CGFloat, bottom: CGFloat)
@@ -1021,6 +1026,10 @@ extension EPUBNavigatorViewController: EPUBNavigatorViewModelDelegate {
 }
 
 extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
+    func spreadView(_ spreadView: EPUBSpreadView, renderNativeOverlayWithParams params: Any) {
+        delegate?.navigator(self, renderNativeOverlay: spreadView, using: params)
+    }
+
     func spreadViewContentInset(_ spreadView: EPUBSpreadView) -> UIEdgeInsets {
         if let inset = delegate?.navigatorContentInset(self) {
             return inset
@@ -1078,6 +1087,7 @@ extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
         }
 
         await spreadView.evaluateScript("(function() {\n\(script)\n})();")
+        await spreadView.evaluateScript("(function() { readium.renderNativeOverlay(); })();")
     }
 
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: PointerEvent) {
