@@ -18,12 +18,14 @@ import {
   scrollToLocator,
   setProperty,
   setCSSProperties,
+  renderNativeOverlay,
 } from "./utils";
 import { getDecorations, registerTemplates } from "./decorator";
 
 // Public API used by the navigator.
 global.readium = {
   // utils
+  renderNativeOverlay: renderNativeOverlay,
   scrollToId: scrollToId,
   scrollToPosition: scrollToPosition,
   scrollToLocator: scrollToLocator,
