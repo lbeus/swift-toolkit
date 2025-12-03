@@ -36,8 +36,8 @@ protocol EPUBSpreadViewDelegate: AnyObject {
     /// Called when the user triggered an input pointer event.
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: PointerEvent)
 
-    /// Called when the spread view finished loading and has loaded page which is wrapper around some type which is not support as EPUB spine element (like PDF)
-    func spreadView(_ spreadView: EPUBSpreadView, renderNativeOverlayWithParams params: Any)
+    /// Called when the spread view finished loading and has loaded page which is wrapper around some type which is not supported as EPUB spine element (like PDF)
+    func spreadView(_ spreadView: EPUBSpreadView, didExtractResources resources: Any)
 
     /// Called when the user triggered an input key event.
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: KeyEvent)
@@ -416,7 +416,7 @@ class EPUBSpreadView: UIView, Loggable, PageView {
         registerJSMessage(named: "selectionChanged") { [weak self] in self?.selectionDidChange($0) }
         registerJSMessage(named: "decorationActivated") { [weak self] in self?.decorationDidActivate($0) }
         registerJSMessage(named: "keyEventReceived") { [weak self] in self?.didReceiveKeyEvent($0) }
-        registerJSMessage(named: "renderNativeOverlay") { [weak self] in self?.renderNativeOverlay($0) }
+        registerJSMessage(named: "extractWrappedResources") { [weak self] in self?.extractWrappedResources($0) }
     }
 
     /// Add the message handlers for incoming javascript events.
@@ -452,8 +452,8 @@ class EPUBSpreadView: UIView, Loggable, PageView {
         delegate?.spreadView(self, didReceive: keyEvent)
     }
 
-    private func renderNativeOverlay(_ params: Any) {
-        delegate?.spreadView(self, renderNativeOverlayWithParams: params)
+    private func extractWrappedResources(_ resources: Any) {
+        delegate?.spreadView(self, didExtractResources: resources)
     }
 
     // MARK: - Decorator

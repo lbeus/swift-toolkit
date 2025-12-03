@@ -387,7 +387,7 @@ export function logError(e) {
   });
 }
 
-export function renderNativeOverlay() {
+export function extractWrappedResources() {
   try {
     var linkResource = document.querySelector("link.wrapped-resource");
     var kind = linkResource.getAttribute("kind");
@@ -396,8 +396,8 @@ export function renderNativeOverlay() {
       kind: kind,
       src: src,
     };
-    webkit.messageHandlers.renderNativeOverlay.postMessage(payload);
+    webkit.messageHandlers.extractWrappedResources.postMessage(payload);
   } catch (e) {
-    console.warn("Wrapper fallback active:", e);
+    console.warn("Wrapped resource not available", e);
   }
 }

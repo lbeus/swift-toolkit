@@ -19,8 +19,8 @@ import WebKit
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController)
 
-    /// Called when spread is loaded (wrapper around type which cannot directly be EPUB spine elements, e.g. PDF )
-    func navigator(_ navigator: EPUBNavigatorViewController, renderNativeOverlay spreadView: UIView, using params: Any)
+    /// Called when spread is loaded (contains reference to a type which cannot directly be EPUB spine element, e.g. PDF )
+    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView)
 }
 
 public extension EPUBNavigatorDelegate {
@@ -28,7 +28,7 @@ public extension EPUBNavigatorDelegate {
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
 
-    func navigator(_ navigator: EPUBNavigatorViewController, renderNativeOverlay spreadView: UIView, using params: Any) {}
+    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView) {}
 }
 
 public typealias EPUBContentInsets = (top: CGFloat, bottom: CGFloat)
@@ -1026,8 +1026,8 @@ extension EPUBNavigatorViewController: EPUBNavigatorViewModelDelegate {
 }
 
 extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
-    func spreadView(_ spreadView: EPUBSpreadView, renderNativeOverlayWithParams params: Any) {
-        delegate?.navigator(self, renderNativeOverlay: spreadView, using: params)
+    func spreadView(_ spreadView: EPUBSpreadView, didExtractResources resources: Any) {
+        delegate?.navigator(self, didExtractResources: resources, for: spreadView)
     }
 
     func spreadViewContentInset(_ spreadView: EPUBSpreadView) -> UIEdgeInsets {
@@ -1087,7 +1087,7 @@ extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
         }
 
         await spreadView.evaluateScript("(function() {\n\(script)\n})();")
-        await spreadView.evaluateScript("(function() { readium.renderNativeOverlay(); })();")
+        await spreadView.evaluateScript("(function() { readium.extractWrappedResources(); })();")
     }
 
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: PointerEvent) {
