@@ -11,6 +11,30 @@ import SwiftSoup
 import UIKit
 import WebKit
 
+extension Publication {
+    func readingOrderLinks(for spread: EPUBSpread) -> [Link] {
+        spread.readingOrderIndices.map({ index in
+            readingOrder[index]
+        })
+    }
+}
+
+public extension Properties {
+    
+    var customOptions: [String: Any]? {
+        guard let custom = otherProperties["custom"] as? [String: String],
+              let src = custom["src"],
+              let kind = custom["kind"] else {
+            return nil
+        }
+        return [
+            "src": src,
+            "kind": kind
+        ]
+    }
+    
+}
+
 @MainActor public protocol EPUBNavigatorDelegate: VisualNavigatorDelegate, SelectableNavigatorDelegate {
     /// Called when the viewport is updated.
     func navigator(_ navigator: EPUBNavigatorViewController, viewportDidChange viewport: EPUBNavigatorViewController.Viewport?)
@@ -21,6 +45,8 @@ import WebKit
 
     /// Called when spread is loaded (contains reference to a type which cannot directly be EPUB spine element, e.g. PDF )
     func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView)
+    
+    func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController?
 }
 
 public extension EPUBNavigatorDelegate {
@@ -29,6 +55,10 @@ public extension EPUBNavigatorDelegate {
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
 
     func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView) {}
+    
+    func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController? {
+        nil
+    }
 }
 
 public typealias EPUBContentInsets = (top: CGFloat, bottom: CGFloat)
@@ -1269,19 +1299,45 @@ extension EPUBNavigatorViewController: EditingActionsControllerDelegate {
 extension EPUBNavigatorViewController: PaginationViewDelegate {
     func paginationView(_ paginationView: PaginationView, pageViewAtIndex index: Int) -> (UIView & PageView)? {
         let spread = spreads[index]
-        let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
-        let spreadView = spreadViewType.init(
-            viewModel: viewModel,
-            spread: spread,
-            scripts: [],
-            animatedLoad: false
-        )
-        spreadView.delegate = self
+        
+        let linksForSpread: [Link] = publication.readingOrderLinks(for: spread)
+        let isCustom = linksForSpread.contains(where: { $0.properties.customOptions != nil  })
+        
+        if isCustom, let customView = delegate?.navigator(self, viewForReadingOrderLinks: linksForSpread) {
+            let customTypeSpreadContainer = CustomTypeSpreadView(frame: .zero)
+////            customTypeSpreadContainer.translatesAutoresizingMaskIntoConstraints = false
+            customView.view.translatesAutoresizingMaskIntoConstraints = false
+//            
+//            customView.view.frame = customTypeSpreadContainer.bounds
+//            customView.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            customTypeSpreadContainer.addSubview(customView.view)
+            NSLayoutConstraint.activate([
+                customTypeSpreadContainer.leadingAnchor.constraint(equalTo: customView.view.leadingAnchor),
+                customTypeSpreadContainer.trailingAnchor.constraint(equalTo: customView.view.trailingAnchor),
+                customTypeSpreadContainer.topAnchor.constraint(equalTo: customView.view.topAnchor),
+                customTypeSpreadContainer.bottomAnchor.constraint(equalTo: customView.view.bottomAnchor)
+            ])
+            addChild(customView)
+            
+//            customTypeSpreadContainer.backgroundColor = .yellow
+            
+            return customTypeSpreadContainer
+        } else {
+            
+            let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
+            let spreadView = spreadViewType.init(
+                viewModel: viewModel,
+                spread: spread,
+                scripts: [],
+                animatedLoad: false
+            )
+            spreadView.delegate = self
 
-        let userContentController = spreadView.webView.configuration.userContentController
-        delegate?.navigator(self, setupUserScripts: userContentController)
+            let userContentController = spreadView.webView.configuration.userContentController
+            delegate?.navigator(self, setupUserScripts: userContentController)
 
-        return spreadView
+            return spreadView
+        }
     }
 
     func paginationViewDidUpdateViews(_ paginationView: PaginationView) {
