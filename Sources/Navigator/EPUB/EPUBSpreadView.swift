@@ -43,7 +43,7 @@ protocol EPUBSpreadViewDelegate: AnyObject {
     func spreadViewDidTerminate()
 }
 
-class EPUBSpreadView: UIView, Loggable, PageView {
+class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
     weak var delegate: EPUBSpreadViewDelegate?
     let viewModel: EPUBNavigatorViewModel
     let spread: EPUBSpread
