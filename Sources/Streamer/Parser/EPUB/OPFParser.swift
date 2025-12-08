@@ -201,7 +201,7 @@ final class OPFParser: Loggable {
         let stringProperties = "\(manifestItem.attr("properties") ?? "") \(spineItem?.attr("properties") ?? "")"
             .components(separatedBy: .whitespaces)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        
+
         var rels: [LinkRelation] = []
         if stringProperties.contains("nav") {
             rels.append(.contents)
@@ -234,7 +234,7 @@ final class OPFParser: Loggable {
     private func parseStringProperties(_ properties: [String]) -> [String: Any] {
         var contains: [String] = []
         var page: Properties.Page?
-        var custom: [String: Any] = [:]
+        var renderCustom: [String: Any] = [:]
 
         for property in properties {
             switch property {
@@ -263,7 +263,7 @@ final class OPFParser: Loggable {
                 if customProperty.count == 2 {
                     let key = String(customProperty[0])
                     let value = String(customProperty[1])
-                    custom[key] = value
+                    renderCustom[key] = value
                 } else {
                     continue
                 }
@@ -277,9 +277,9 @@ final class OPFParser: Loggable {
         if let page = page {
             otherProperties["page"] = page.rawValue
         }
-        
-        if !custom.isEmpty {
-            otherProperties["custom"] = custom
+
+        if !renderCustom.isEmpty {
+            otherProperties["renderCustom"] = renderCustom
         }
 
         return otherProperties

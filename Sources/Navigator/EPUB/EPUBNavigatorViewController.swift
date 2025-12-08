@@ -11,28 +11,21 @@ import SwiftSoup
 import UIKit
 import WebKit
 
-extension Publication {
-    func readingOrderLinks(for spread: EPUBSpread) -> [Link] {
-        spread.readingOrderIndices.map({ index in
-            readingOrder[index]
-        })
-    }
-}
-
 public extension Properties {
-    
-    var customOptions: [String: Any]? {
-        guard let custom = otherProperties["custom"] as? [String: String],
-              let src = custom["src"],
-              let kind = custom["kind"] else {
+    struct RenderCustomMetadata {
+        public let href: String
+        public let type: String
+    }
+
+    var customOptions: RenderCustomMetadata? {
+        guard let custom = otherProperties["renderCustom"] as? [String: String],
+              let href = custom["document"],
+              let type = custom["custom-type"]
+        else {
             return nil
         }
-        return [
-            "src": src,
-            "kind": kind
-        ]
+        return RenderCustomMetadata(href: href, type: type)
     }
-    
 }
 
 @MainActor public protocol EPUBNavigatorDelegate: VisualNavigatorDelegate, SelectableNavigatorDelegate {
@@ -43,9 +36,6 @@ public extension Properties {
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController)
 
-    /// Called when spread is loaded (contains reference to a type which cannot directly be EPUB spine element, e.g. PDF )
-    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView)
-    
     func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController?
 }
 
@@ -54,8 +44,6 @@ public extension EPUBNavigatorDelegate {
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
 
-    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView) {}
-    
     func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController? {
         nil
     }
@@ -1056,10 +1044,6 @@ extension EPUBNavigatorViewController: EPUBNavigatorViewModelDelegate {
 }
 
 extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
-    func spreadView(_ spreadView: EPUBSpreadView, didExtractResources resources: Any) {
-        delegate?.navigator(self, didExtractResources: resources, for: spreadView)
-    }
-
     func spreadViewContentInset(_ spreadView: EPUBSpreadView) -> UIEdgeInsets {
         if let inset = delegate?.navigatorContentInset(self) {
             return inset
@@ -1117,7 +1101,6 @@ extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
         }
 
         await spreadView.evaluateScript("(function() {\n\(script)\n})();")
-        await spreadView.evaluateScript("(function() { readium.extractWrappedResources(); })();")
     }
 
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: PointerEvent) {
@@ -1299,31 +1282,25 @@ extension EPUBNavigatorViewController: EditingActionsControllerDelegate {
 extension EPUBNavigatorViewController: PaginationViewDelegate {
     func paginationView(_ paginationView: PaginationView, pageViewAtIndex index: Int) -> (UIView & PageView)? {
         let spread = spreads[index]
-        
-        let linksForSpread: [Link] = publication.readingOrderLinks(for: spread)
-        let isCustom = linksForSpread.contains(where: { $0.properties.customOptions != nil  })
-        
+
+        let linksForSpread: [Link] = spread.readingOrderIndices.map { index in
+            publication.readingOrder[index]
+        }
+        let isCustom = linksForSpread.contains(where: { $0.properties.customOptions != nil })
+
         if isCustom, let customView = delegate?.navigator(self, viewForReadingOrderLinks: linksForSpread) {
             let customTypeSpreadContainer = CustomTypeSpreadView(frame: .zero)
-////            customTypeSpreadContainer.translatesAutoresizingMaskIntoConstraints = false
             customView.view.translatesAutoresizingMaskIntoConstraints = false
-//            
-//            customView.view.frame = customTypeSpreadContainer.bounds
-//            customView.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             customTypeSpreadContainer.addSubview(customView.view)
             NSLayoutConstraint.activate([
                 customTypeSpreadContainer.leadingAnchor.constraint(equalTo: customView.view.leadingAnchor),
                 customTypeSpreadContainer.trailingAnchor.constraint(equalTo: customView.view.trailingAnchor),
                 customTypeSpreadContainer.topAnchor.constraint(equalTo: customView.view.topAnchor),
-                customTypeSpreadContainer.bottomAnchor.constraint(equalTo: customView.view.bottomAnchor)
+                customTypeSpreadContainer.bottomAnchor.constraint(equalTo: customView.view.bottomAnchor),
             ])
             addChild(customView)
-            
-//            customTypeSpreadContainer.backgroundColor = .yellow
-            
             return customTypeSpreadContainer
         } else {
-            
             let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
             let spreadView = spreadViewType.init(
                 viewModel: viewModel,
