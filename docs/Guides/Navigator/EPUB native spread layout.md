@@ -1,16 +1,16 @@
 # EPUBNavigatorDelegate
 
 Readium allows rendering EPUB spine elements in a custom way (e.g. PDF is rendered using PDFKit instead of being loaded in WKWebView).
-Client can add custom overlay on top of WKWebView using 
+Client can provide custom view for given page using 
 ```swift 
-func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView)
+func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController?
 ```
  delegate method.
 
-In order for this method to be invoked for given ```EPUBSpreadView```, loaded XHTML resource must have ```link``` tag element inside ```head``` block.
+In order for this method to be invoked for given resource/spine element must have ```properties``` attribute configured with appropriate metadata needed to able to render custom spread.
 
 ```html
-<link href="pages/sample-page.pdf" rel="preload" type="application/pdf" class="wrapped-resource" kind="pdf"/>
+ <item id="item-page-1" href="001-chapter.xhtml" media-type="application/xhtml+xml properties="document:pages/pg-1605839.pdf custom-type:pdf"/>
 ```
 
-Link tag must have class set to ```wrapped-resource```.  ```href``` attribute is used to identify resource registered in EPUB which client can render in custom way, and ```kind``` is arbitrary type used by client to define how given resource should be rendered. 
+```properties``` attribute contains document reference and custom type which are used by the client to render given resource.
