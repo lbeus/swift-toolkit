@@ -1293,50 +1293,44 @@ extension EPUBNavigatorViewController: PaginationViewDelegate {
             customView.view.translatesAutoresizingMaskIntoConstraints = false
             customTypeSpreadContainer.addSubview(customView.view)
             addChild(customView)
-            
+
             NSLayoutConstraint.activate([
                 customTypeSpreadContainer.leadingAnchor.constraint(equalTo: customView.view.leadingAnchor),
                 customTypeSpreadContainer.trailingAnchor.constraint(equalTo: customView.view.trailingAnchor),
                 customTypeSpreadContainer.topAnchor.constraint(equalTo: customView.view.topAnchor),
                 customTypeSpreadContainer.bottomAnchor.constraint(equalTo: customView.view.bottomAnchor),
             ])
-            
+
             // handle case when only one page in spread is custom view
             if linksForSpread.count == 2 {
-                let spreadView = createSpreadView(spread: spread)
                 if linksForSpread[0].properties.renderOptions == nil {
+                    let spreadView = createSpreadView(spread: spread)
                     customTypeSpreadContainer.addSubview(spreadView)
                     NSLayoutConstraint.activate([
-                        customTypeSpreadContainer.leadingAnchor.constraint(equalTo: spreadView.leadingAnchor),
-                        customTypeSpreadContainer.topAnchor.constraint(equalTo: spreadView.topAnchor),
-                        customTypeSpreadContainer.bottomAnchor.constraint(equalTo: spreadView.bottomAnchor),
-                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5)
+                        spreadView.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                        spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                        spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
                     ])
                 } else if linksForSpread[1].properties.renderOptions == nil {
+                    let spreadView = createSpreadView(spread: spread)
                     customTypeSpreadContainer.addSubview(spreadView)
                     NSLayoutConstraint.activate([
-                        customTypeSpreadContainer.trailingAnchor.constraint(equalTo: spreadView.trailingAnchor),
-                        customTypeSpreadContainer.topAnchor.constraint(equalTo: spreadView.topAnchor),
-                        customTypeSpreadContainer.bottomAnchor.constraint(equalTo: spreadView.bottomAnchor),
-                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5)
+                        spreadView.trailingAnchor.constraint(equalTo: customTypeSpreadContainer.trailingAnchor),
+                        spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                        spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
                     ])
                 }
             }
-            
-//            customTypeSpreadContainer.setNeedsLayout()
-//            customTypeSpreadContainer.layoutIfNeeded()
-            
-            customTypeSpreadContainer.setNeedsUpdateConstraints()
-            
             return customTypeSpreadContainer
         } else {
             return createSpreadView(spread: spread)
         }
     }
-    
-    
+
     private func createSpreadView(spread: EPUBSpread) -> EPUBSpreadView {
-        let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
+        let spreadViewType = EPUBReflowableSpreadView.self // (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
         let spreadView = spreadViewType.init(
             viewModel: viewModel,
             spread: spread,

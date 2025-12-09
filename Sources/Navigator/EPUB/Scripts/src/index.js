@@ -18,14 +18,12 @@ import {
   scrollToLocator,
   setProperty,
   setCSSProperties,
-  extractWrappedResources,
 } from "./utils";
 import { getDecorations, registerTemplates } from "./decorator";
 
 // Public API used by the navigator.
 global.readium = {
   // utils
-  extractWrappedResources: extractWrappedResources,
   scrollToId: scrollToId,
   scrollToPosition: scrollToPosition,
   scrollToLocator: scrollToLocator,
