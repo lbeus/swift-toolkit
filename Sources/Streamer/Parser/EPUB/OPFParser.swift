@@ -234,7 +234,6 @@ final class OPFParser: Loggable {
     private func parseStringProperties(_ properties: [String]) -> [String: Any] {
         var contains: [String] = []
         var page: Properties.Page?
-        var renderCustom: [String: Any] = [:]
 
         for property in properties {
             switch property {
@@ -259,14 +258,7 @@ final class OPFParser: Loggable {
             case "page-spread-center", "rendition:page-spread-center":
                 page = .center
             default:
-                let customProperty = property.split(separator: ":")
-                if customProperty.count == 2 {
-                    let key = String(customProperty[0])
-                    let value = String(customProperty[1])
-                    renderCustom[key] = value
-                } else {
-                    continue
-                }
+                continue
             }
         }
 
@@ -276,10 +268,6 @@ final class OPFParser: Loggable {
         }
         if let page = page {
             otherProperties["page"] = page.rawValue
-        }
-
-        if !renderCustom.isEmpty {
-            otherProperties["renderCustom"] = renderCustom
         }
 
         return otherProperties

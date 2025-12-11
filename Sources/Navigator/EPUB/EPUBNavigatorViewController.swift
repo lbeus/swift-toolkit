@@ -11,23 +11,6 @@ import SwiftSoup
 import UIKit
 import WebKit
 
-public extension Properties {
-    struct RenderMetadata {
-        public let href: String
-        public let type: String
-    }
-
-    var renderOptions: RenderMetadata? {
-        guard let custom = otherProperties["renderCustom"] as? [String: String],
-              let href = custom["document"],
-              let type = custom["custom-type"]
-        else {
-            return nil
-        }
-        return RenderMetadata(href: href, type: type)
-    }
-}
-
 @MainActor public protocol EPUBNavigatorDelegate: VisualNavigatorDelegate, SelectableNavigatorDelegate {
     /// Called when the viewport is updated.
     func navigator(_ navigator: EPUBNavigatorViewController, viewportDidChange viewport: EPUBNavigatorViewController.Viewport?)
@@ -36,7 +19,7 @@ public extension Properties {
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController)
 
-    func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController?
+    func navigator(_ navigator: EPUBNavigatorViewController, viewControllersForReadingOrderLinks links: [Link]) -> (left: UIViewController?, center: UIViewController?, right: UIViewController?)
 }
 
 public extension EPUBNavigatorDelegate {
@@ -44,8 +27,8 @@ public extension EPUBNavigatorDelegate {
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
 
-    func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController? {
-        nil
+    func navigator(_ navigator: EPUBNavigatorViewController, viewControllersForReadingOrderLinks links: [Link]) -> (left: UIViewController?, center: UIViewController?, right: UIViewController?) {
+        (left: nil, center: nil, right: nil)
     }
 }
 
@@ -1286,51 +1269,18 @@ extension EPUBNavigatorViewController: PaginationViewDelegate {
         let linksForSpread: [Link] = spread.readingOrderIndices.map { index in
             publication.readingOrder[index]
         }
-        let isCustom = linksForSpread.contains(where: { $0.properties.renderOptions != nil })
 
-        if isCustom, let customView = delegate?.navigator(self, viewForReadingOrderLinks: linksForSpread) {
-            let customTypeSpreadContainer = CustomTypeSpreadViewWrapper(spread: spread)
-            customView.view.translatesAutoresizingMaskIntoConstraints = false
-            customTypeSpreadContainer.addSubview(customView.view)
-            addChild(customView)
-
-            NSLayoutConstraint.activate([
-                customTypeSpreadContainer.leadingAnchor.constraint(equalTo: customView.view.leadingAnchor),
-                customTypeSpreadContainer.trailingAnchor.constraint(equalTo: customView.view.trailingAnchor),
-                customTypeSpreadContainer.topAnchor.constraint(equalTo: customView.view.topAnchor),
-                customTypeSpreadContainer.bottomAnchor.constraint(equalTo: customView.view.bottomAnchor),
-            ])
-
-            // handle case when only one page in spread is custom view
-            if linksForSpread.count == 2 {
-                if linksForSpread[0].properties.renderOptions == nil {
-                    let spreadView = createSpreadView(spread: spread)
-                    customTypeSpreadContainer.addSubview(spreadView)
-                    NSLayoutConstraint.activate([
-                        spreadView.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
-                        spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
-                        spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
-                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
-                    ])
-                } else if linksForSpread[1].properties.renderOptions == nil {
-                    let spreadView = createSpreadView(spread: spread)
-                    customTypeSpreadContainer.addSubview(spreadView)
-                    NSLayoutConstraint.activate([
-                        spreadView.trailingAnchor.constraint(equalTo: customTypeSpreadContainer.trailingAnchor),
-                        spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
-                        spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
-                        spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
-                    ])
-                }
-            }
-            return customTypeSpreadContainer
+        let customVCs = delegate?.navigator(self, viewControllersForReadingOrderLinks: linksForSpread)
+        // at least one page in spread is custom view
+        if let customVCs, customVCs.left != nil || customVCs.right != nil || customVCs.center != nil {
+            return createCustomSpread(spread: spread, customViewControllers: customVCs, linksForSpread: linksForSpread)
         } else {
             return createSpreadView(spread: spread)
         }
     }
 
     private func createSpreadView(spread: EPUBSpread) -> EPUBSpreadView {
-        let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
+        let spreadViewType = EPUBReflowableSpreadView.self // (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
         let spreadView = spreadViewType.init(
             viewModel: viewModel,
             spread: spread,
@@ -1354,5 +1304,87 @@ extension EPUBNavigatorViewController: PaginationViewDelegate {
 
     func paginationView(_ paginationView: PaginationView, positionCountAtIndex index: Int) -> Int {
         spreads[index].positionCount(in: readingOrder, positionsByReadingOrder: positionsByReadingOrder)
+    }
+}
+
+extension EPUBNavigatorViewController {
+    private func createCustomSpread(
+        spread: EPUBSpread,
+        customViewControllers customVCs: (left: UIViewController?, center: UIViewController?, right: UIViewController?),
+        linksForSpread: [Link]
+    ) -> (UIView & PageView)? {
+        let customTypeSpreadContainer = CustomTypeSpreadViewWrapper(spread: spread)
+
+        if let left = customVCs.left {
+            customTypeSpreadContainer.addSubview(left.view)
+            addChild(left)
+            NSLayoutConstraint.activate([
+                left.view.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                left.view.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                left.view.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                left.view.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
+            ])
+        }
+
+        if let center = customVCs.center {
+            customTypeSpreadContainer.addSubview(center.view)
+            addChild(center)
+            NSLayoutConstraint.activate([
+                center.view.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                center.view.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                center.view.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                center.view.trailingAnchor.constraint(equalTo: customTypeSpreadContainer.trailingAnchor),
+            ])
+        }
+
+        if let right = customVCs.right {
+            customTypeSpreadContainer.addSubview(right.view)
+            addChild(right)
+            NSLayoutConstraint.activate([
+                right.view.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                right.view.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                right.view.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                right.view.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
+            ])
+        }
+
+        // handle case when only one page in two pages spread is custom view
+        if linksForSpread.count == 2, customVCs.center == nil {
+            if customVCs.left == nil {
+                let spreadView =
+                    createSpreadView(
+                        spread: EPUBSpread(
+                            spread: false,
+                            readingOrderIndices: spread.readingOrderIndices.lowerBound ... spread.readingOrderIndices.lowerBound,
+                            readingProgression: spread.readingProgression
+                        )
+                    )
+                customTypeSpreadContainer.addSubview(spreadView)
+                NSLayoutConstraint.activate([
+                    spreadView.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                    spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                    spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                    spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
+                ])
+            } else if customVCs.right == nil {
+                let spreadView =
+                    createSpreadView(
+                        spread: EPUBSpread(
+                            spread: false,
+                            readingOrderIndices: spread.readingOrderIndices.upperBound ... spread.readingOrderIndices.upperBound,
+                            readingProgression: spread.readingProgression
+                        )
+                    )
+                customTypeSpreadContainer.addSubview(spreadView)
+                NSLayoutConstraint.activate([
+                    spreadView.trailingAnchor.constraint(equalTo: customTypeSpreadContainer.trailingAnchor),
+                    spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                    spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                    spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
+                ])
+            }
+        }
+
+        return customTypeSpreadContainer
     }
 }
