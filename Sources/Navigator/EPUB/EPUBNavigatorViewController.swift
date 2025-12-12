@@ -1280,7 +1280,7 @@ extension EPUBNavigatorViewController: PaginationViewDelegate {
     }
 
     private func createSpreadView(spread: EPUBSpread) -> EPUBSpreadView {
-        let spreadViewType = EPUBReflowableSpreadView.self // (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
+        let spreadViewType = (publication.metadata.layout == .fixed) ? EPUBFixedSpreadView.self : EPUBReflowableSpreadView.self
         let spreadView = spreadViewType.init(
             viewModel: viewModel,
             spread: spread,
