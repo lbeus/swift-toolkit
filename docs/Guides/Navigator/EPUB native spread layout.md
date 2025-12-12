@@ -1,16 +1,14 @@
 # EPUBNavigatorDelegate
 
 Readium allows rendering EPUB spine elements in a custom way (e.g. PDF is rendered using PDFKit instead of being loaded in WKWebView).
-Client can provide custom view for given page using 
+Client can provide custom view for given spread using 
 ```swift 
-func navigator(_ navigator: EPUBNavigatorViewController, viewForReadingOrderLinks links: [Link]) -> UIViewController?
+    func navigator(_ navigator: EPUBNavigatorViewController, viewControllersForReadingOrderLinks links: [Link]) -> (left: UIViewController?, center: UIViewController?, right: UIViewController?)
 ```
  delegate method.
+ 
+ Returned tuple contains left and right pages if spread has 2 pages. Center property is used in case spread has 1 page.
+ In case any of spread pages doesn't require custom view ```nil``` is returned for such page, and readium will fallback to webview rendering.
 
-In order for this method to be invoked for given resource/spine element must have ```properties``` attribute configured with appropriate metadata needed to able to render custom spread.
-
-```html
- <item id="item-page-1" href="001-chapter.xhtml" media-type="application/xhtml+xml properties="document:pages/pg-1605839.pdf custom-type:pdf"/>
-```
-
-```properties``` attribute contains document reference and custom type which are used by the client to render given resource.
+```links``` contains array of EPUB spine element links (if spread has 2 pages it will have 2 links, otherwise 1 link).
+EPUB document could hold JSON resource which contains mapping of spine element links to metadata model needed to perform custom rendering (e.g. asset hrefs, custom view type info ...)
