@@ -1231,6 +1231,12 @@ extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
         }
     }
 
+    func spreadView(_ spreadView: EPUBSpreadView, didScrollIn direction: ScrollDirection) {
+        if paginationView?.currentView == spreadView {
+            delegate?.navigator(self, didScrollIn: direction)
+        }
+    }
+
     func spreadView(_ spreadView: EPUBSpreadView, present viewController: UIViewController) {
         present(viewController, animated: true)
     }
@@ -1383,6 +1389,22 @@ extension EPUBNavigatorViewController {
                     spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor, multiplier: 0.5),
                 ])
             }
+        } else {
+            let spreadView =
+                createSpreadView(
+                    spread: EPUBSpread(
+                        spread: false,
+                        readingOrderIndices: spread.readingOrderIndices.lowerBound ... spread.readingOrderIndices.upperBound,
+                        readingProgression: spread.readingProgression
+                    )
+                )
+            customTypeSpreadContainer.addSubview(spreadView)
+            NSLayoutConstraint.activate([
+                spreadView.leadingAnchor.constraint(equalTo: customTypeSpreadContainer.leadingAnchor),
+                spreadView.topAnchor.constraint(equalTo: customTypeSpreadContainer.topAnchor),
+                spreadView.bottomAnchor.constraint(equalTo: customTypeSpreadContainer.bottomAnchor),
+                spreadView.widthAnchor.constraint(equalTo: customTypeSpreadContainer.widthAnchor),
+            ])
         }
 
         return customTypeSpreadContainer
