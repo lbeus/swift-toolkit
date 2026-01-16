@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -31,6 +31,16 @@ final class EPUBReflowableSpreadView: EPUBSpreadView {
             ],
             animatedLoad: animatedLoad
         )
+    }
+
+    override func clear() {
+        super.clear()
+
+        // Clean up go to continuations.
+        for continuation in goToContinuations {
+            continuation.resume()
+        }
+        goToContinuations.removeAll()
     }
 
     override func setupWebView() {
@@ -193,7 +203,6 @@ final class EPUBReflowableSpreadView: EPUBSpreadView {
     // Location to scroll to in the resource once the page is loaded.
     private var pendingLocation: PageLocation = .start
 
-    @MainActor
     override func go(to location: PageLocation) async {
         guard isSpreadLoaded else {
             // Delays moving to the location until the document is loaded.
@@ -215,14 +224,12 @@ final class EPUBReflowableSpreadView: EPUBSpreadView {
         didCompleteGoTo()
     }
 
-    @MainActor
     private func waitGoToCompletion() async {
         await withCheckedContinuation { continuation in
             goToContinuations.append(continuation)
         }
     }
 
-    @MainActor
     private func didCompleteGoTo() {
         for cont in goToContinuations {
             cont.resume()
@@ -230,7 +237,6 @@ final class EPUBReflowableSpreadView: EPUBSpreadView {
         goToContinuations.removeAll()
     }
 
-    @MainActor
     private var goToContinuations: [CheckedContinuation<Void, Never>] = []
 
     @discardableResult
