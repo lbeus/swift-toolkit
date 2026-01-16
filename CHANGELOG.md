@@ -8,10 +8,49 @@ All notable changes to this project will be documented in this file. Take a look
 
 #### Navigator
 
+* Support for displaying Divina (image-based publications like CBZ) in the fixed-layout EPUB navigator.
+* Bitmap images in the EPUB reading order are now supported as a fixed layout resource.
+
+#### Streamer
+
+* The `ImageParser` now extracts metadata from `ComicInfo.xml` files in CBZ archives.
+* EPUB manifest item fallbacks are now exposed as `alternates` in the corresponding `Link`.
+* EPUBs with only bitmap images in the spine are now treated as Divina publications with fixed layout.
+    * When an EPUB spine item is HTML with a bitmap image fallback (or vice versa), the image is preferred as the primary link.
+
+### Deprecated
+
+#### Streamer
+
+* The EPUB manifest item `id` attribute is no longer exposed in `Link.properties`.
+
+### Fixed
+
+#### Navigator
+
+* PDF documents are now opened off the main thread, preventing UI freezes with large files.
+* Fixed providing a custom reading order to the `EPUBNavigatorViewController` (contributed by [@lbeus](https://github.com/readium/swift-toolkit/pull/694)).
+
+
+## [3.6.0]
+
+### Added
+
+#### Navigator
+
 * Added `DragPointerObserver` to recognize drag gestures with pointer events.
 * Added `DirectionalNavigationAdapter.onNavigation` callback to be notified when a navigation action is triggered.
     * This callback is called before executing any navigation action.
     * Useful for hiding UI elements when the user navigates, or implementing analytics.
+* Added swipe gesture support for navigating in PDF paginated spread mode.
+* Added `fit` preference for fixed-layout publications (PDF and FXL EPUB) to control how pages are scaled within the viewport.
+    * In the PDF navigator, it is only effective in scroll mode. Paginated mode always uses `page` fit due to PDFKit limitations.
+
+### Deprecated
+
+#### Navigator
+
+* `PDFNavigatorViewController.scalesDocumentToFit` is now deprecated and non-functional. The navigator always scales the document to fit the viewport.
 
 ### Changed
 
@@ -19,7 +58,21 @@ All notable changes to this project will be documented in this file. Take a look
 
 * Support for asynchronous callbacks with `onCreatePublication` (contributed by [@smoores-dev](https://github.com/readium/swift-toolkit/pull/673)).
 
+#### Navigator
+
+* The `Fit` enum has been redesigned to fit the PDF implementation.
+    * **Breaking change:** Update any code using the old `Fit` enum values.
+* The fixed-layout navigators (PDF and FXL EPUB)'s content inset behavior has changed:
+    * iPhone: Continues to apply window safe area insets (to account for notch/Dynamic Island).
+    * iPad/macOS: Now displays edge-to-edge with no automatic safe area insets.
+    * You can customize this behavior with `VisualNavigatorDelegate.navigatorContentInset(_:)`.
+
 ### Fixed
+
+#### Navigator
+
+* Fixed EPUB fixed-layout spread settings not updating after device rotation when the app was in the background.
+* Fixed zoom-to-fit scaling in PDF paginated spread mode when `offsetFirstPage` is enabled.
 
 #### LCP
 
@@ -498,8 +551,8 @@ All notable changes to this project will be documented in this file. Take a look
 
 * New `VisualNavigatorDelegate` APIs to handle keyboard events (contributed by [@lukeslu](https://github.com/readium/swift-toolkit/pull/267)).
     * This can be used to turn pages with the arrow keys, for example.
-* [Support for custom fonts with the EPUB navigator](docs/Guides/EPUB%20Fonts.md).
-* A brand new user preferences API for configuring the EPUB and PDF Navigators. This new API is easier and safer to use. To learn how to integrate it in your app, [please refer to the user guide](docs/Guides/Navigator%20Preferences.md) and [migration guide](docs/Migration%20Guide.md).
+* [Support for custom fonts with the EPUB navigator](docs/Guides/Navigator/EPUB%20Fonts.md).
+* A brand new user preferences API for configuring the EPUB and PDF Navigators. This new API is easier and safer to use. To learn how to integrate it in your app, [please refer to the user guide](docs/Guides/Navigator/Preferences.md) and [migration guide](docs/Migration%20Guide.md).
     * New EPUB user preferences:
         * `fontWeight` - Base text font weight.
         * `textNormalization` - Normalize font style, weight and variants, which improves accessibility.
@@ -1031,3 +1084,4 @@ progression. Now if no reading progression is set, the `effectiveReadingProgress
 [3.3.0]: https://github.com/readium/swift-toolkit/compare/3.2.0...3.3.0
 [3.4.0]: https://github.com/readium/swift-toolkit/compare/3.3.0...3.4.0
 [3.5.0]: https://github.com/readium/swift-toolkit/compare/3.4.0...3.5.0
+[3.6.0]: https://github.com/readium/swift-toolkit/compare/3.5.0...3.6.0
