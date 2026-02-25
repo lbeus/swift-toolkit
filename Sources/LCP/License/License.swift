@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -153,7 +153,7 @@ extension License: LCPLicense {
                     return
                 }
 
-                rights.copy = max(0, printLeft - pageCount)
+                rights.print = max(0, printLeft - pageCount)
             }
 
             return allowed

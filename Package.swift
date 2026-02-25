@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "Readium",
     defaultLocalization: "en",
-    platforms: [.iOS("13.4")],
+    platforms: [.iOS("15.0")],
     products: [
         .library(name: "ReadiumShared", targets: ["ReadiumShared"]),
         .library(name: "ReadiumStreamer", targets: ["ReadiumStreamer"]),
@@ -53,7 +53,10 @@ let package = Package(
         ),
         .testTarget(
             name: "ReadiumSharedTests",
-            dependencies: ["ReadiumShared"],
+            dependencies: [
+                "ReadiumShared",
+                "TestPublications",
+            ],
             path: "Tests/SharedTests",
             resources: [
                 .copy("Fixtures"),
@@ -101,7 +104,10 @@ let package = Package(
         .testTarget(
             name: "ReadiumNavigatorTests",
             dependencies: ["ReadiumNavigator"],
-            path: "Tests/NavigatorTests"
+            path: "Tests/NavigatorTests",
+            exclude: [
+                "UITests",
+            ]
         ),
 
         .target(
@@ -125,6 +131,7 @@ let package = Package(
             name: "ReadiumLCP",
             dependencies: [
                 "CryptoSwift",
+                "ReadiumInternal",
                 "ReadiumShared",
                 .product(name: "ReadiumZIPFoundation", package: "ZIPFoundation"),
             ],
@@ -140,7 +147,7 @@ let package = Package(
         //     dependencies: ["ReadiumLCP"],
         //     path: "Tests/LCPTests",
         //     resources: [
-        //         .copy("Fixtures"),
+        //         .copy("../Fixtures"),
         //     ]
         // ),
 
@@ -170,6 +177,15 @@ let package = Package(
             name: "ReadiumInternalTests",
             dependencies: ["ReadiumInternal"],
             path: "Tests/InternalTests"
+        ),
+
+        // Shared test publications used across multiple test targets.
+        .target(
+            name: "TestPublications",
+            path: "Tests/Publications",
+            resources: [
+                .copy("Publications"),
+            ]
         ),
     ]
 )

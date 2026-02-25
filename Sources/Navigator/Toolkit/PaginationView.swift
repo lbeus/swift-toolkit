@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -148,6 +148,18 @@ final class PaginationView: UIView, Loggable {
         }
 
         scrollView.contentOffset.x = xOffsetForIndex(currentIndex)
+    }
+
+    override func willMove(toSuperview newSuperview: UIView?) {
+        super.willMove(toSuperview: newSuperview)
+
+        if newSuperview == nil {
+            // Remove all spread views to break retain cycles
+            for (_, view) in loadedViews {
+                view.removeFromSuperview()
+            }
+            loadedViews.removeAll()
+        }
     }
 
     override func didMoveToWindow() {

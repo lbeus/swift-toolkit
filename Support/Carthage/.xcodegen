@@ -81,7 +81,7 @@
           "target" : "ReadiumInternal"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -106,7 +106,7 @@
           "target" : "ReadiumLCP"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -120,7 +120,7 @@
       "type" : "framework"
     },
     "ReadiumInternal" : {
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -151,7 +151,7 @@
           "target" : "ReadiumInternal"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -182,7 +182,7 @@
           "target" : "ReadiumInternal"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -215,7 +215,7 @@
           "target" : "ReadiumInternal"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -249,7 +249,7 @@
           "sdk" : "CoreServices.framework"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -277,7 +277,7 @@
           "target" : "ReadiumInternal"
         }
       ],
-      "deploymentTarget" : "13.4",
+      "deploymentTarget" : "15.0",
       "platform" : "iOS",
       "settings" : {
         "INFOPLIST_FILE" : "Info.plist",
@@ -327,12 +327,11 @@
 ../../Sources/Internal/Extensions/UInt64.swift
 ../../Sources/Internal/Extensions/URL.swift
 ../../Sources/Internal/JSON.swift
+../../Sources/Internal/Keychain.swift
 ../../Sources/Internal/Measure.swift
 ../../Sources/Internal/UTI.swift
 ../../Sources/LCP
 ../../Sources/LCP/Authentications
-../../Sources/LCP/Authentications/Base.lproj
-../../Sources/LCP/Authentications/Base.lproj/LCPDialogViewController.xib
 ../../Sources/LCP/Authentications/LCPAuthenticating.swift
 ../../Sources/LCP/Authentications/LCPDialog.swift
 ../../Sources/LCP/Authentications/LCPDialogAuthentication.swift
@@ -376,9 +375,17 @@
 ../../Sources/LCP/License/Model/Components/LSD/PotentialRights.swift
 ../../Sources/LCP/License/Model/LicenseDocument.swift
 ../../Sources/LCP/License/Model/StatusDocument.swift
+../../Sources/LCP/Repositories
+../../Sources/LCP/Repositories/Keychain
+../../Sources/LCP/Repositories/Keychain/LCPKeychainLicenseRepository.swift
+../../Sources/LCP/Repositories/Keychain/LCPKeychainPassphraseRepository.swift
 ../../Sources/LCP/Resources
 ../../Sources/LCP/Resources/en.lproj
 ../../Sources/LCP/Resources/en.lproj/Localizable.strings
+../../Sources/LCP/Resources/fr.lproj
+../../Sources/LCP/Resources/fr.lproj/Localizable.strings
+../../Sources/LCP/Resources/it.lproj
+../../Sources/LCP/Resources/it.lproj/Localizable.strings
 ../../Sources/LCP/Resources/prod-license.lcpl
 ../../Sources/LCP/Services
 ../../Sources/LCP/Services/CRLService.swift
@@ -662,6 +669,7 @@
 ../../Sources/Shared/Publication/Services/Cover
 ../../Sources/Shared/Publication/Services/Cover/CoverService.swift
 ../../Sources/Shared/Publication/Services/Cover/GeneratedCoverService.swift
+../../Sources/Shared/Publication/Services/Cover/ResourceCoverService.swift
 ../../Sources/Shared/Publication/Services/Locator
 ../../Sources/Shared/Publication/Services/Locator/DefaultLocatorService.swift
 ../../Sources/Shared/Publication/Services/Locator/LocatorService.swift
@@ -679,8 +687,12 @@
 ../../Sources/Shared/Publication/Subject.swift
 ../../Sources/Shared/Publication/TDM.swift
 ../../Sources/Shared/Resources
-../../Sources/Shared/Resources/en-US.lproj
-../../Sources/Shared/Resources/en-US.lproj/W3CAccessibilityMetadataDisplayGuide.strings
+../../Sources/Shared/Resources/en.lproj
+../../Sources/Shared/Resources/en.lproj/W3CAccessibilityMetadataDisplayGuide.strings
+../../Sources/Shared/Resources/fr.lproj
+../../Sources/Shared/Resources/fr.lproj/W3CAccessibilityMetadataDisplayGuide.strings
+../../Sources/Shared/Resources/it.lproj
+../../Sources/Shared/Resources/it.lproj/W3CAccessibilityMetadataDisplayGuide.strings
 ../../Sources/Shared/Toolkit
 ../../Sources/Shared/Toolkit/Archive
 ../../Sources/Shared/Toolkit/Archive/ArchiveOpener.swift
@@ -838,6 +850,7 @@
 ../../Sources/Streamer/Parser/EPUB/Services/EPUBPositionsService.swift
 ../../Sources/Streamer/Parser/EPUB/XMLNamespace.swift
 ../../Sources/Streamer/Parser/Image
+../../Sources/Streamer/Parser/Image/ComicInfoParser.swift
 ../../Sources/Streamer/Parser/Image/ImageParser.swift
 ../../Sources/Streamer/Parser/PDF
 ../../Sources/Streamer/Parser/PDF/PDFParser.swift

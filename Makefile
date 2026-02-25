@@ -7,13 +7,18 @@ help:
 	  test\t\t\tRun unit tests\n\
 	  lint-format\t\tVerify formatting\n\
 	  format\t\tFormat sources\n\
-	  update-a11y-l10n\tUpdate the Accessibility Metadata Display Guide localization files\n\
+	  update-locales\tUpdate the localization files\n\
 	"
 
 .PHONY: carthage-project
 carthage-project:
+	rm -rf **/.DS_Store
 	rm -rf $(SCRIPTS_PATH)/node_modules/
 	xcodegen -s Support/Carthage/project.yml --use-cache --cache-path Support/Carthage/.xcodegen
+
+.PHONY: navigator-ui-tests-project
+navigator-ui-tests-project:
+	xcodegen -s Tests/NavigatorTests/UITests/project.yml
 
 .PHONY: scripts
 scripts:
@@ -32,11 +37,6 @@ update-scripts:
 	@which corepack >/dev/null 2>&1 || (echo "ERROR: corepack is required, please install it first\nhttps://pnpm.io/installation#using-corepack"; exit 1)
 	pnpm install --dir "$(SCRIPTS_PATH)"
 
-.PHONY: test
-test:
-	# To limit to a particular test suite: -only-testing:ReadiumSharedTests
-	xcodebuild test -scheme "Readium-Package" -destination "platform=iOS Simulator,name=iPhone 15" | xcbeautify -q
-
 .PHONY: lint-format
 lint-format:
 	swift run --package-path BuildTools swiftformat --lint .
@@ -46,11 +46,17 @@ f: format
 format:
 	swift run --package-path BuildTools swiftformat .
 
-.PHONY: update-a11y-l10n
-update-a11y-l10n:
-	@which node >/dev/null 2>&1 || (echo "ERROR: node is required, please install it first"; exit 1)
-	rm -rf publ-a11y-display-guide-localizations
-	git clone https://github.com/w3c/publ-a11y-display-guide-localizations.git
-	node BuildTools/Scripts/convert-a11y-display-guide-localizations.js publ-a11y-display-guide-localizations apple Sources/Shared readium.a11y.
-	rm -rf publ-a11y-display-guide-localizations
+BRANCH ?= main
 
+.PHONY: update-locales
+update-locales:
+	@which node >/dev/null 2>&1 || (echo "ERROR: node is required, please install it first"; exit 1)
+ifndef DIR
+	rm -rf thorium-locales
+	git clone -b $(BRANCH) --single-branch --depth 1 https://github.com/edrlab/thorium-locales.git
+endif
+	node BuildTools/Scripts/convert-thorium-localizations.js thorium-locales
+ifndef DIR
+	rm -rf thorium-locales
+endif
+	make format

@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -60,6 +60,7 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
     private var activityIndicatorStopWorkItem: DispatchWorkItem?
 
     private(set) var isSpreadLoaded = false
+    private var spreadLoadTask: Task<Void, Never>?
 
     required init(
         viewModel: EPUBNavigatorViewModel,
@@ -95,6 +96,18 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        clear()
+    }
+
+    /// Called when the spread view is removed from the view hierarchy, to
+    /// clear pending operations and retain cycles.
+    func clear() {
+        webView.stopLoading()
+
+        spreadLoadTask?.cancel()
+        spreadLoadTask = nil
+
+        // Disable JS messages to break WKUserContentController reference.
         disableJSMessages()
     }
 
@@ -126,14 +139,18 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
         webView.scrollView
     }
 
+    override func willMove(toSuperview newSuperview: UIView?) {
+        super.willMove(toSuperview: newSuperview)
+
+        if newSuperview == nil {
+            clear()
+        }
+    }
+
     override func didMoveToSuperview() {
         super.didMoveToSuperview()
 
-        if superview == nil {
-            disableJSMessages()
-            // Fixing an iOS 9 bug by explicitly clearing scrollView.delegate before deinitialization
-            scrollView.delegate = nil
-        } else {
+        if superview != nil {
             enableJSMessages()
             scrollView.delegate = self
         }
@@ -150,9 +167,9 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
 
         log(.trace, "Evaluate script: \(script)")
         return await withCheckedContinuation { continuation in
-            webView.evaluateJavaScript(script) { res, error in
+            webView.evaluateJavaScript(script) { [weak self] res, error in
                 if let error = error {
-                    self.log(.error, error)
+                    self?.log(.error, error)
                     continuation.resume(returning: .failure(error))
                 } else {
                     continuation.resume(returning: .success(res ?? ()))
@@ -266,7 +283,8 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
     /// Called by the javascript code when the spread contents is fully loaded.
     /// The JS message `spreadLoaded` needs to be emitted by a subclass script, EPUBSpreadView's scripts don't.
     private func spreadDidLoad(_ body: Any) {
-        Task { @MainActor in
+        spreadLoadTask?.cancel()
+        spreadLoadTask = Task { @MainActor in
             isSpreadLoaded = true
             applySettings()
             await spreadDidLoad()
@@ -374,9 +392,9 @@ class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
     func findFirstVisibleElementLocator() async -> Locator? {
         let result = await evaluateScript("readium.findFirstVisibleLocator()")
         do {
-            let resource = viewModel.readingOrder[spread.leading]
+            let link = spread.first.link
             let locator = try Locator(json: result.get())?
-                .copy(href: resource.url(), mediaType: resource.mediaType ?? .xhtml)
+                .copy(href: link.url(), mediaType: link.mediaType ?? .xhtml)
             return locator
         } catch {
             log(.error, error)
@@ -603,7 +621,7 @@ private extension EPUBSpreadView {
                 return
             }
 
-            trace("stopping activity indicator because spread \(viewModel.readingOrder[spread.leading].href) did not load")
+            trace("stopping activity indicator because spread \(spread.first.link.href) did not load")
             activityIndicatorView?.stopAnimating()
         }
 

@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -42,7 +42,7 @@ public struct DirectoryContainer: Container, Loggable {
             includingPropertiesForKeys: [.isRegularFileKey],
             options: options
         ) {
-            for case let url as URL in enumerator {
+            while let url = enumerator.nextObject() as? URL {
                 do {
                     let fileAttributes = try url.resourceValues(forKeys: [.isRegularFileKey])
                     if fileAttributes.isRegularFile == true, let entry = directory.relativize(url.anyURL) {

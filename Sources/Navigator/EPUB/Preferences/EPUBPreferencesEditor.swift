@@ -1,5 +1,5 @@
 //
-//  Copyright 2025 Readium Foundation. All rights reserved.
+//  Copyright 2026 Readium Foundation. All rights reserved.
 //  Use of this source code is governed by the BSD-style license
 //  available in the top-level LICENSE file of the project.
 //
@@ -68,6 +68,18 @@ public final class EPUBPreferencesEditor: StatefulPreferencesEditor<EPUBPreferen
                     && !$0.settings.scroll
             },
             supportedValues: [.auto, .one, .two]
+        )
+
+    /// Method for fitting the content within the viewport.
+    ///
+    /// Only effective with fixed-layout publications.
+    public lazy var fit: AnyEnumPreference<Fit> =
+        enumPreference(
+            preference: \.fit,
+            setting: \.fit,
+            defaultEffectiveValue: defaults.fit ?? .auto,
+            isEffective: { [layout] _ in layout == .fixed },
+            supportedValues: [.auto, .page, .width]
         )
 
     /// Default typeface for the text.
@@ -218,6 +230,25 @@ public final class EPUBPreferencesEditor: StatefulPreferencesEditor<EPUBPreferen
             supportedRange: 1.0 ... 2.0,
             progressionStrategy: .increment(0.1),
             format: { $0.formatDecimal(maximumFractionDigits: 5) }
+        )
+
+    /// Indicates whether the first page should be displayed alone and centered
+    /// instead of alongside the second page.
+    ///
+    /// When `nil`, the publication metadata is used to determine if the first
+    /// page will be displayed alone.
+    ///
+    /// Only effective when:
+    ///  - the publication is fixed-layout
+    ///  - `spread` is not `.never`
+    public lazy var offsetFirstPage: AnyPreference<Bool?> =
+        preference(
+            preference: \.offsetFirstPage,
+            setting: \.offsetFirstPage,
+            isEffective: { [layout] in
+                layout == .fixed
+                    && $0.settings.spread != .never
+            }
         )
 
     /// Factor applied to horizontal margins. Default to 1.
