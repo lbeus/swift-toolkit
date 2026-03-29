@@ -18,12 +18,17 @@ import WebKit
     // MARK: - WebView Customization
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController)
+
+    /// Called when spread is loaded (contains reference to a type which cannot directly be EPUB spine element, e.g. PDF )
+    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView)
 }
 
 public extension EPUBNavigatorDelegate {
     func navigator(_ navigator: EPUBNavigatorViewController, viewportDidChange viewport: EPUBNavigatorViewController.Viewport?) {}
 
     func navigator(_ navigator: EPUBNavigatorViewController, setupUserScripts userContentController: WKUserContentController) {}
+
+    func navigator(_ navigator: EPUBNavigatorViewController, didExtractResources resources: Any, for spreadView: UIView) {}
 }
 
 public typealias EPUBContentInsets = (top: CGFloat, bottom: CGFloat)
@@ -1057,6 +1062,10 @@ extension EPUBNavigatorViewController: EPUBNavigatorViewModelDelegate {
 }
 
 extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
+    func spreadView(_ spreadView: EPUBSpreadView, didExtractResources resources: Any) {
+        delegate?.navigator(self, didExtractResources: resources, for: spreadView)
+    }
+
     func spreadViewContentInset(_ spreadView: EPUBSpreadView) -> UIEdgeInsets {
         if let inset = delegate?.navigatorContentInset(self) {
             return inset
@@ -1123,6 +1132,7 @@ extension EPUBNavigatorViewController: EPUBSpreadViewDelegate {
         }
 
         await spreadView.evaluateScript("(function() {\n\(script)\n})();")
+        await spreadView.evaluateScript("(function() { readium.extractWrappedResources(); })();")
     }
 
     func spreadView(_ spreadView: EPUBSpreadView, didReceive event: PointerEvent) {
