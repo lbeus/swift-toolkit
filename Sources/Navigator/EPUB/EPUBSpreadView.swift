@@ -29,6 +29,9 @@ protocol EPUBSpreadViewDelegate: AnyObject {
     /// Called when the pages visible in the spread changed.
     func spreadViewPagesDidChange(_ spreadView: EPUBSpreadView)
 
+    /// Called when the user scrolls through the content.
+    func spreadView(_ spreadView: EPUBSpreadView, didScrollIn direction: ScrollDirection)
+
     /// Called when the spread view needs to present a view controller.
     func spreadView(_ spreadView: EPUBSpreadView, present viewController: UIViewController)
 
@@ -42,7 +45,7 @@ protocol EPUBSpreadViewDelegate: AnyObject {
     func spreadViewDidTerminate()
 }
 
-class EPUBSpreadView: UIView, Loggable, PageView {
+class EPUBSpreadView: UIView, Loggable, PageView, EPUBSpreadViewContainer {
     weak var delegate: EPUBSpreadViewDelegate?
     let viewModel: EPUBNavigatorViewModel
     let spread: EPUBSpread
